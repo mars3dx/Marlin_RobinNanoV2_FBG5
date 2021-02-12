@@ -143,7 +143,7 @@ static void event_handler(lv_obj_t * obj, lv_event_t event) {
 
       }
       else if (event == LV_EVENT_RELEASED) {
-        value = level_pos_y5;
+        value = level_pos_x5;
         lv_clear_manual_level_pos_settings();
         lv_draw_number_key();
       }

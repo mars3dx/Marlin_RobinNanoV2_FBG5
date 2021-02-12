@@ -203,6 +203,8 @@ typedef struct {
   int   filamentchange_unload_length;
   int   filamentchange_unload_speed;
   int   filament_limit_temper;
+  int   filament_preheat_temp;
+  int   bed_preheat_temp;
   float pausePosX;
   float pausePosY;
   float pausePosZ;
@@ -409,7 +411,10 @@ typedef enum {
   x_sensitivity,
   y_sensitivity,
   z_sensitivity,
-  z2_sensitivity
+  z2_sensitivity,
+
+  filament_preheat_temp,
+  bed_preheat_temp
 } num_key_value_state;
 extern num_key_value_state value;
 

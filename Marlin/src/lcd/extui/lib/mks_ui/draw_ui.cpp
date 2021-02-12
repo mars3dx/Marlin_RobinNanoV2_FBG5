@@ -147,7 +147,8 @@ void gCfgItems_init() {
   gCfgItems.filamentchange_unload_length = 200;
   gCfgItems.filamentchange_unload_speed  = 1000;
   gCfgItems.filament_limit_temper        = 200;
-
+  gCfgItems.filament_preheat_temp        = 210;
+  gCfgItems.bed_preheat_temp             = 60;
   gCfgItems.encoder_enable = true;
   
   W25QXX.SPI_FLASH_BufferRead((uint8_t *)&gCfgItems.spi_flash_flag, VAR_INF_ADDR, sizeof(gCfgItems.spi_flash_flag));
@@ -1012,6 +1013,12 @@ void GUI_RefreshPage() {
       }
       break;
     case PRINT_READY_UI:
+#ifdef MKS_TEMP_ON_MAIN
+      if (temperature_change_frequency) {
+        temperature_change_frequency = 0;
+        rd_temp_update();
+      }
+#endif      
       /*
       if (gCfgItems.display_style == 2) {
         if (temperature_change_frequency) {

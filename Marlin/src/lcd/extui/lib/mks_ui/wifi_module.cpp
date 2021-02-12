@@ -24,11 +24,13 @@
 #if HAS_TFT_LVGL_UI
 
 #include "draw_ui.h"
+//#include "../../module/mks_wifi/mks_wifi_sd.h"
 #include "wifi_module.h"
 #include "wifi_upload.h"
 #include "SPI_TFT.h"
 
 #if USE_WIFI_FUNCTION
+
 
 #include "../../../../MarlinCore.h"
 #include "../../../../module/temperature.h"
@@ -123,6 +125,8 @@ extern char flash_dma_mode;
 
 extern uint8_t bmp_public_buf[14 * 1024];
 
+
+
 uint32_t   getWifiTick(){
 	return millis();
 }
@@ -206,6 +210,7 @@ void exchangeFlashMode(char dmaMode) {
 	}
 }
 
+#if 0
 static bool longName2DosName(const char* longName, uint8_t* dosName) {   
   uint8_t i = 11;
   while (i) dosName[--i] = '\0';         
@@ -226,6 +231,21 @@ static bool longName2DosName(const char* longName, uint8_t* dosName) {
   }
   return dosName[0] != '\0';              // Return true if any name was set
 }
+#else
+static bool longName2DosName(const char* longName, uint8_t* dosName) {
+	memset(dosName, 0, 12);
+	int dp = strlen(longName);
+	while ((dp > 0) && (longName[dp] != '.')) { dp--; }
+	if (dp)
+	{
+		memcpy(dosName, longName, dp > 8 ? 8 : dp);
+		strcat((char *)dosName, ".GCO");
+
+		return true;
+	}
+	return false;
+}
+#endif
 
 static int storeRcvData(volatile uint8_t *bufToCpy, int32_t len) {
 	unsigned char tmpW = wifiDmaRcvFifo.write_cur;
@@ -240,8 +260,7 @@ static int storeRcvData(volatile uint8_t *bufToCpy, int32_t len) {
 
 		return 1;
 	}
-	else
-		return 0;
+	return 0;
 	
 }
 
@@ -249,12 +268,14 @@ static void esp_dma_pre() {
 
 	dma_channel_reg_map *channel_regs = dma_tube_regs(DMA1, DMA_CH5);
 
-	channel_regs->CCR &= ~( 1 << 0 ) ; 
+	//channel_regs->CCR &= ~( 1 << 0 ) ;
+	CBI32(channel_regs->CCR, 0);
     channel_regs->CMAR = (uint32_t)WIFISERIAL.usart_device->rb->buf;
     channel_regs->CNDTR = 0x0000   ;
     channel_regs->CNDTR = UART_RX_BUFFER_SIZE ;
     DMA1->regs->IFCR = 0xF0000 ;
-    channel_regs->CCR |= 1 << 0 ;
+	SBI32(channel_regs->CCR, 0);
+    //channel_regs->CCR |= 1 << 0 ;
 
 	/*
 	dma_xfer_size dma_bit_size = DMA_SIZE_8BITS;
@@ -677,7 +698,6 @@ typedef struct {
 	uint8_t *data; 
 	uint8_t tail;
 } ESP_PROTOC_FRAME;
-
 
 static int cut_msg_head(uint8_t *msg, uint16_t msgLen, uint16_t cutLen) {
 	int i;
@@ -1476,8 +1496,6 @@ void utf8_2_unicode(uint8_t *source,uint8_t Len) {
 	memcpy(source, FileName_unicode, sizeof(FileName_unicode));
 }
 
-
-
 static void file_first_msg_handle(uint8_t * msg, uint16_t msgLen) {
 	uint8_t fileNameLen = *msg;
 	
@@ -1538,6 +1556,7 @@ static void file_first_msg_handle(uint8_t * msg, uint16_t msgLen) {
 		return;
 	}
 	sprintf((char *)saveFilePath, "%s", dosName);
+	//sprintf((char *)saveFilePath, "%s", file_writer.saveFileName);
 
 	//ZERO(list_file.long_name[sel_id]);
 	//ZERO(list_file.file_name[sel_id]);
@@ -1702,6 +1721,7 @@ static void file_fragment_msg_handle(uint8_t * msg, uint16_t msgLen) {
 	}
 }
 
+//extern void mks_wifi_start_file_upload(ESP_PROTOC_FRAME *packet);
 
 void esp_data_parser(char *cmdRxBuf, int len) {
 	int32_t head_pos;

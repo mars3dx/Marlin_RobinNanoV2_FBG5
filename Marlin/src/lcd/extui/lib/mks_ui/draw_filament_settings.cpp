@@ -40,6 +40,8 @@ static lv_obj_t * scr;
 #define ID_FILAMENT_SET_TEMP        6
 #define ID_FILAMENT_SET_DOWN        12
 #define ID_FILAMENT_SET_UP          13
+#define ID_EPREHEAT_SET_TEMP        14
+#define ID_BPREHEAT_SET_TEMP        15
 
 static void event_handler(lv_obj_t * obj, lv_event_t event) {
   switch (obj->mks_obj_id) {
@@ -123,6 +125,26 @@ static void event_handler(lv_obj_t * obj, lv_event_t event) {
         lv_draw_filament_settings();
       }
       break;
+    case ID_EPREHEAT_SET_TEMP:
+      if (event == LV_EVENT_CLICKED) {
+
+      }
+      else if (event == LV_EVENT_RELEASED) {
+        value = filament_preheat_temp;
+        lv_clear_filament_settings();
+        lv_draw_number_key();
+      }
+      break;      
+    case ID_BPREHEAT_SET_TEMP:
+      if (event == LV_EVENT_CLICKED) {
+
+      }
+      else if (event == LV_EVENT_RELEASED) {
+        value = bed_preheat_temp;
+        lv_clear_filament_settings();
+        lv_draw_number_key();
+      }
+      break;      
   }
 }
 
@@ -134,6 +156,8 @@ void lv_draw_filament_settings(void) {
   lv_obj_t *labelOutSpeedText = NULL, *buttonOutSpeedValue = NULL, *labelOutSpeedValue = NULL;
   lv_obj_t *labelTemperText = NULL, *buttonTemperValue = NULL, *labelTemperValue = NULL;
   lv_obj_t * line1 = NULL, * line2 = NULL, * line3 = NULL, * line4 = NULL;
+  lv_obj_t *labelEPreheatText = NULL, *buttonEPreheatValue = NULL, *labelEPreheatValue = NULL;
+  lv_obj_t *labelBedPreheatText = NULL, *buttonBedPreheatValue = NULL, *labelBedPreheatValue = NULL;
   if (disp_state_stack._disp_state[disp_state_stack._disp_index] != FILAMENT_SETTINGS_UI) {
     disp_state_stack._disp_index++;
     disp_state_stack._disp_state[disp_state_stack._disp_index] = FILAMENT_SETTINGS_UI;
@@ -250,10 +274,43 @@ void lv_draw_filament_settings(void) {
     lv_btn_set_style(buttonTemperValue, LV_BTN_STYLE_REL, &style_para_value);
 	  lv_btn_set_style(buttonTemperValue, LV_BTN_STYLE_PR, &style_para_value);
     labelTemperValue = lv_label_create(buttonTemperValue, NULL);
-    
 
     line1 = lv_line_create(scr, NULL);
     lv_ex_line(line1, line_points[0]);
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    labelEPreheatText = lv_label_create(scr, NULL);
+    lv_obj_set_style(labelEPreheatText, &tft_style_label_rel);
+    lv_obj_set_pos(labelEPreheatText, PARA_UI_POS_X, PARA_UI_POS_Y * 2 + 10);
+    lv_label_set_text(labelEPreheatText, PSTR("E0 Preheat Temp"));
+
+    buttonEPreheatValue = lv_btn_create(scr, NULL);
+    lv_obj_set_pos(buttonEPreheatValue, PARA_UI_VALUE_POS_X, PARA_UI_POS_Y * 2 + PARA_UI_VALUE_V_2);
+    lv_obj_set_size(buttonEPreheatValue, PARA_UI_VALUE_BTN_X_SIZE, PARA_UI_VALUE_BTN_Y_SIZE);
+    lv_obj_set_event_cb_mks(buttonEPreheatValue, event_handler, ID_EPREHEAT_SET_TEMP, NULL, 0);
+    lv_btn_set_style(buttonEPreheatValue, LV_BTN_STYLE_REL, &style_para_value);
+	  lv_btn_set_style(buttonEPreheatValue, LV_BTN_STYLE_PR, &style_para_value);
+    labelEPreheatValue = lv_label_create(buttonEPreheatValue, NULL);
+
+    line2 = lv_line_create(scr, NULL);
+    lv_ex_line(line2, line_points[1]);
+
+    labelBedPreheatText = lv_label_create(scr, NULL);
+    lv_obj_set_style(labelBedPreheatText, &tft_style_label_rel);
+    lv_obj_set_pos(labelBedPreheatText, PARA_UI_POS_X, PARA_UI_POS_Y * 3 + 10);
+    lv_label_set_text(labelBedPreheatText, PSTR("Bed Preheat Temp"));
+
+    buttonBedPreheatValue = lv_btn_create(scr, NULL);
+    lv_obj_set_pos(buttonBedPreheatValue, PARA_UI_VALUE_POS_X, PARA_UI_POS_Y * 3 + PARA_UI_VALUE_V_2);
+    lv_obj_set_size(buttonBedPreheatValue, PARA_UI_VALUE_BTN_X_SIZE, PARA_UI_VALUE_BTN_Y_SIZE);
+    lv_obj_set_event_cb_mks(buttonBedPreheatValue, event_handler, ID_BPREHEAT_SET_TEMP, NULL, 0);
+    lv_btn_set_style(buttonBedPreheatValue, LV_BTN_STYLE_REL, &style_para_value);
+	  lv_btn_set_style(buttonBedPreheatValue, LV_BTN_STYLE_PR, &style_para_value);
+    labelBedPreheatValue = lv_label_create(buttonBedPreheatValue, NULL);
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    line3 = lv_line_create(scr, NULL);
+    lv_ex_line(line3, line_points[2]);
 
     buttonTurnPage = lv_btn_create(scr, NULL);
     lv_obj_set_event_cb_mks(buttonTurnPage, event_handler, ID_FILAMENT_SET_UP, NULL, 0);
@@ -316,6 +373,16 @@ void lv_draw_filament_settings(void) {
       sprintf_P(public_buf_l, PSTR("%d"), gCfgItems.filament_limit_temper);
       lv_label_set_text(labelTemperValue, public_buf_l);
       lv_obj_align(labelTemperValue, buttonTemperValue, LV_ALIGN_CENTER, 0, 0);
+
+      ZERO(public_buf_l);
+      sprintf_P(public_buf_l, PSTR("%d"), gCfgItems.filament_preheat_temp);
+      lv_label_set_text(labelEPreheatValue, public_buf_l);
+      lv_obj_align(labelEPreheatValue, buttonEPreheatValue, LV_ALIGN_CENTER, 0, 0);
+
+      ZERO(public_buf_l);
+      sprintf_P(public_buf_l, PSTR("%d"), gCfgItems.bed_preheat_temp);
+      lv_label_set_text(labelBedPreheatValue, public_buf_l);
+      lv_obj_align(labelBedPreheatValue, buttonBedPreheatValue, LV_ALIGN_CENTER, 0, 0);
 
       lv_label_set_text(labelTurnPage, machine_menu.previous);
       lv_obj_align(labelTurnPage, buttonTurnPage, LV_ALIGN_CENTER, 0, 0);

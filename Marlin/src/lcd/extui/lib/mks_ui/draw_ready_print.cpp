@@ -38,6 +38,7 @@
 
 #include "../../../../MarlinCore.h"
 #include "../../../../module/temperature.h"
+#include "../../../../gcode/gcode.h"
 
 #include <stdio.h>
 
@@ -51,8 +52,11 @@ static lv_obj_t * scr;
 #define ID_TOOL   1
 #define ID_SET    2
 #define ID_PRINT  3
+#define ID_ETEMP  4
+#define ID_BTEMP  5
 
 static void event_handler(lv_obj_t * obj, lv_event_t event) {
+  char buf[30] = {0};
   switch (obj->mks_obj_id) {
     case ID_TOOL:
       if (event == LV_EVENT_CLICKED) {
@@ -82,6 +86,38 @@ static void event_handler(lv_obj_t * obj, lv_event_t event) {
         lv_draw_print_file();
       }
       break;
+#ifdef MKS_TEMP_ON_MAIN
+    case ID_ETEMP:
+      if (event == LV_EVENT_CLICKED) {
+        // nothing to do
+      }
+      else if (event == LV_EVENT_RELEASED) {
+        if((int)thermalManager.temp_hotend[0].target > 0) {
+          gcode.process_subcommands_now_P(PSTR("M104 S0"));
+        }
+        else {
+          ZERO(buf);
+          sprintf_P(buf, PSTR("M104 S%d"), gCfgItems.filament_preheat_temp);          
+          gcode.process_subcommands_now_P(buf);
+        }
+      }
+      break;
+    case ID_BTEMP:
+      if (event == LV_EVENT_CLICKED) {
+        // nothing to do
+      }
+      else if (event == LV_EVENT_RELEASED) {
+        if((int)thermalManager.temp_bed.target > 0) {
+          gcode.process_subcommands_now_P(PSTR("M140 S0"));
+        }
+        else {
+          ZERO(buf);
+          sprintf_P(buf, PSTR("M140 S%d"), gCfgItems.bed_preheat_temp);
+          gcode.process_subcommands_now_P(buf);
+        }
+      }
+      break;
+#endif
   }
 }
 
@@ -132,6 +168,18 @@ void mks_disp_test() {
     lv_label_set_text(bed, buf);
   #endif
 }
+
+#ifdef MKS_TEMP_ON_MAIN
+void rd_temp_update(void) {
+  char buf[30] = {0};
+
+  sprintf(buf, printing_menu.temp1, (int)thermalManager.temp_hotend[0].celsius, (int)thermalManager.temp_hotend[0].target);
+  lv_label_set_text(e1, buf);  
+
+  sprintf(buf, printing_menu.bed_temp, (int)thermalManager.temp_bed.celsius, (int)thermalManager.temp_bed.target);
+  lv_label_set_text(bed, buf);
+}
+#endif
 
 void lv_draw_ready_print(void) {
   char buf[30] = {0};
@@ -249,6 +297,33 @@ void lv_draw_ready_print(void) {
 
   }
   else {
+
+#ifdef MKS_TEMP_ON_MAIN
+  // show current temp on main screen
+    lv_obj_t *buttonExt1, *buttonBedstate;
+    buttonExt1 = lv_imgbtn_create(scr, NULL);
+    lv_obj_set_event_cb_mks(buttonExt1, event_handler, ID_ETEMP, NULL, 0);
+    lv_imgbtn_set_src(buttonExt1, LV_BTN_STATE_REL, "F:/bmp_ext1_state.bin");
+    lv_imgbtn_set_src(buttonExt1, LV_BTN_STATE_PR, "F:/bmp_ext1_state.bin");
+
+    buttonBedstate = lv_imgbtn_create(scr, NULL);
+    lv_obj_set_event_cb_mks(buttonBedstate, event_handler, ID_BTEMP, NULL, 0);
+    lv_imgbtn_set_src(buttonBedstate, LV_BTN_STATE_REL, "F:/bmp_bed_state.bin");
+    lv_imgbtn_set_src(buttonBedstate, LV_BTN_STATE_PR, "F:/bmp_bed_state.bin");
+
+    lv_obj_set_pos(buttonExt1, 40, 15);
+    lv_obj_set_pos(buttonBedstate, 201, 15);
+
+    e1 = lv_label_create(scr, NULL);
+    lv_obj_set_style(e1, &tft_style_label_rel);
+    lv_obj_set_pos(e1, 85, 25);
+
+    bed = lv_label_create(scr, NULL);
+    lv_obj_set_style(bed, &tft_style_label_rel);
+    lv_obj_set_pos(bed, 246, 25);
+
+    rd_temp_update();
+#endif
 
     /*Create an Image button*/
 	buttonTool = lv_imgbtn_create(scr, NULL);

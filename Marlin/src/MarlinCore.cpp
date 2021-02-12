@@ -972,6 +972,13 @@ void setup() {
 
   SETUP_RUN(esp_wifi_init());
 
+  #if HAS_TFT_LVGL_UI
+    #if ENABLED(SDSUPPORT)
+      if (!card.isMounted()) SETUP_RUN(card.mount()); // Mount SD to load graphics and fonts
+    #endif
+    SETUP_RUN(tft_lvgl_init());
+  #endif
+
   // Check startup - does nothing if bootloader sets MCUSR to 0
   const byte mcu = HAL_get_reset_source();
   if (mcu & RST_POWER_ON) SERIAL_ECHOLNPGM(STR_POWERUP);
@@ -1218,12 +1225,12 @@ void setup() {
     SETUP_RUN(page_manager.init());
   #endif
 
-  #if HAS_TFT_LVGL_UI
-    #if ENABLED(SDSUPPORT)
-      if (!card.isMounted()) SETUP_RUN(card.mount()); // Mount SD to load graphics and fonts
-    #endif
-    SETUP_RUN(tft_lvgl_init());
-  #endif
+//  #if HAS_TFT_LVGL_UI
+//    #if ENABLED(SDSUPPORT)
+//      if (!card.isMounted()) SETUP_RUN(card.mount()); // Mount SD to load graphics and fonts
+//    #endif
+//    SETUP_RUN(tft_lvgl_init());
+//  #endif
 
   #if ENABLED(PASSWORD_ON_STARTUP)
     SETUP_RUN(password.lock_machine());      // Will not proceed until correct password provided

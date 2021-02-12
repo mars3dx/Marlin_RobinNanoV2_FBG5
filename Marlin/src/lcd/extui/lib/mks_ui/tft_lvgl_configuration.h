@@ -32,7 +32,7 @@ extern "C" { /* C-declarations for C++ */
 
 #include <lvgl.h>
 
-//#define GRAPHICAL_TFT_ROTATE_180
+#define GRAPHICAL_TFT_ROTATE_180
 //#define USE_WIFI_FUNCTION		1
 
 extern void tft_lvgl_init();
